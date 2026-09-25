@@ -1,0 +1,72 @@
+# SearXNG 配置：OpenClaw web_search 用（内网自用，开启 UI + JSON）
+#
+# 关键认知：
+#   1) 360search / quark 在 SearXNG 上游默认 settings 里本来就是 disabled: true
+#   2) keep_only 只是“保留引擎文件、剔除其余”，并不会启用被禁用的引擎
+#   3) 必须在顶层 engines: 块为每个要用的引擎显式 disabled: false，
+#      默认聚合搜索才会真正调用它们
+#
+# 部署：
+#   cp 本文件到 <部署目录>/settings.yml
+#   docker compose up -d
+
+use_default_settings:
+  engines:
+    keep_only:
+      - quark
+      - 360search
+      - wikipedia
+
+general:
+  instance_name: "TTY-SearXNG"
+  debug: false
+
+server:
+  # 请替换为你自己生成的随机密钥：python3 -c "import secrets;print(secrets.token_hex(32))"
+  secret_key: "REPLACE_WITH_YOUR_RANDOM_SECRET_HEX"
+  bind_address: "0.0.0.0"
+  port: 8080
+  limiter: false
+  public_instance: false
+  image_proxy: true
+  http_protocol_version: "1.0"
+  method: "POST"
+
+ui:
+  default_locale: "zh-Hans-CN"
+  query_in_title: true
+  infinite_scroll: false
+  center_alignment: false
+  default_theme: "simple"
+  theme_args:
+    simple_style: "auto"
+
+search:
+  safe_search: 0
+  autocomplete: ""
+  default_lang: "zh-CN"
+  ban_time_on_fail: 5
+  max_ban_time_on_fail: 120
+  formats:
+    - html
+    - json
+
+outgoing:
+  request_timeout: 8.0
+  max_request_timeout: 12.0
+  useragent_suffix: ""
+  pool_connections: 100
+  pool_maxsize: 20
+  enable_http2: true
+
+# 引擎微调：显式启用（覆盖上游默认 disabled=true）
+engines:
+  - name: quark
+    disabled: false
+    timeout: 8.0
+  - name: 360search
+    disabled: false
+    timeout: 8.0
+  - name: wikipedia
+    disabled: false
+    timeout: 8.0

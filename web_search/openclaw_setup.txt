@@ -1,0 +1,41 @@
+# OpenClaw web_search 接入命令清单（在 openclaw-gateway 容器内执行）
+#
+# 前置：SearXNG 已部署并在 <HOST_IP>:8088 运行（见 settings.yml / docker-compose.yml / deploy_searxng.py）
+#
+# 说明：容器内 env OPENCLAW_GATEWAY_PORT 可能是宿主映射端口(如 10084)，
+#       但容器内实际监听 18789。操作网关的命令请显式带 --url，别依赖自动推导。
+#       以下把 <PASS> 替换为你的网关密码。
+
+# ---------- 1. 安装官方 SearXNG 插件 ----------
+node dist/index.js plugins install clawhub:@openclaw/searxng-plugin
+
+# ---------- 2. 配置 SearXNG 实例地址（插件级） ----------
+node dist/index.js config set \
+  plugins.entries.searxng.config.webSearch.baseUrl \
+  '"http://<HOST_IP>:8088/"'
+
+# ---------- 3. 关键：启用 web_search 工具并指定默认 provider（工具级） ----------
+node dist/index.js config set tools.web.search.enabled  true
+node dist/index.js config set tools.web.search.provider searxng
+
+# ---------- 4. 重载插件 ----------
+node dist/index.js plugins reload searxng
+
+# ---------- 5. 命令行实测 ----------
+node dist/index.js infer web search \
+  --provider searxng --query '北京今天天气' --limit 5 --json
+
+# ---------- 6.（可选）浏览器设备免批准 ----------
+# 若浏览器访问 Control UI 提示“需在 Gateway 主机批准一次”：
+node dist/index.js devices list   --url ws://127.0.0.1:18789 --password <PASS>
+node dist/index.js devices approve --url ws://127.0.0.1:18789 --password <PASS> <requestId>
+
+# ---------- 7.（可选）登录从 Gateway Token 改为用户名密码 ----------
+# node dist/index.js config set gateway.auth.mode password
+# node dist/index.js config set gateway.auth.password <新密码>
+# node dist/index.js config set gateway.controlUi.dangerouslyDisableDeviceAuth true
+# docker restart openclaw-gateway
+
+# ---------- 验证 ----------
+# provider 状态：searxng 应为 available=true configured=true selected=true
+node dist/index.js infer web providers

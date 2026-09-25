@@ -1,0 +1,48 @@
+# SearXNG + Redis（OpenClaw web_search 自托管实例）
+# 对外 Web UI / API：http://<HOST_IP>:8088
+#
+# 用法：
+#   cd /home/docker/searxng
+#   cp 本文件为 docker-compose.yml（连同 settings.yml）
+#   docker compose up -d
+#
+# 提示：境外镜像直连不通时先走加速再打回标准 tag：
+#   docker pull docker.m.daocloud.io/searxng/searxng:latest
+#   docker tag  docker.m.daocloud.io/searxng/searxng:latest searxng/searxng:latest
+#
+# 把 <HOST_IP> 换成你宿主机内网 IP。
+
+services:
+  searxng:
+    container_name: searxng
+    image: searxng/searxng:latest
+    restart: unless-stopped
+    ports:
+      - "8088:8080"
+    volumes:
+      - ./settings.yml:/etc/searxng/settings.yml:ro
+    environment:
+      - SEARXNG_BASE_URL=http://<HOST_IP>:8088/
+      - UWSGI_WORKERS=4
+      - UWSGI_THREADS=4
+    depends_on:
+      - redis
+    networks:
+      - searxnet
+
+  redis:
+    container_name: searxng-redis
+    image: redis:7.0-alpine
+    restart: unless-stopped
+    command: redis-server --save 60 1 --loglevel warning
+    volumes:
+      - redis-data:/data
+    networks:
+      - searxnet
+
+volumes:
+  redis-data:
+
+networks:
+  searxnet:
+    driver: bridge
