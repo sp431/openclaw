@@ -84,10 +84,10 @@ curl -s -o /dev/null -w '%{http_code}\n' http://127.0.0.1:8088/   # 200
 # 1. 安装官方 SearXNG 插件（自动 enabled 并加入 allow）
 node dist/index.js plugins install clawhub:@openclaw/searxng-plugin
 
-# 2. 配置 SearXNG 地址（免重启生效）
+# 2. 配置 SearXNG 地址（免重启生效；<HOST_IP> 换成你的内网主机 IP）
 node dist/index.js config set \
   plugins.entries.searxng.config.webSearch.baseUrl \
-  '"http://192.168.254.83:8088/"'
+  '"http://<HOST_IP>:8088/"'
 
 # 3. THE KEY：启用 web_search 工具并指定默认 provider（否则 chat 提示 no provider）
 node dist/index.js config set tools.web.search.enabled  true
@@ -168,11 +168,11 @@ docker restart openclaw-gateway
 ## 五、验证端到端
 
 ```bash
-# 1. SearXNG 首页
-curl -s -o /dev/null -w '%{http_code}\n' http://192.168.254.83:8088/
+# 1. SearXNG 首页（<HOST_IP> 换成你的内网主机 IP）
+curl -s -o /dev/null -w '%{http_code}\n' http://<HOST_IP>:8088/
 
 # 2. SearXNG JSON 搜索（默认聚合）
-curl -s 'http://192.168.254.83:8088/search?q=%E5%8C%97%E4%BA%AC%E5%A4%A9%E6%B0%94&format=json' \
+curl -s 'http://<HOST_IP>:8088/search?q=%E5%8C%97%E4%BA%AC%E5%A4%A9%E6%B0%94&format=json' \
   -H 'Accept: application/json' | python3 -m json.tool | head
 
 # 3. OpenClaw provider 状态（searxng 应为 selected=true）
